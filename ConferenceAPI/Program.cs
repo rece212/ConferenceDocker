@@ -1,5 +1,6 @@
 
 using ConferenceAPI.Data;
+using ConferenceAPI.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace ConferenceAPI
@@ -12,7 +13,7 @@ namespace ConferenceAPI
 
             builder.Services.AddDbContext<ApplicationDbConnect>(options =>
             {
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DbServer"));
+                options.UseSqlServer(Environment.GetEnvironmentVariable("SQL_CONNECTION_STRING"));
             });
 
             // Add services to the container.
@@ -24,35 +25,29 @@ namespace ConferenceAPI
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+
+            app.UseSwagger();
+            app.UseSwaggerUI();
+           
 
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
 
-            var summaries = new[]
-            {
-                "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-            };
+            // Attendees APIs
+            app.MapGet("/attendees", async (ApplicationDbConnect context) =>
+                await context.Attendees.ToListAsync());
 
-            app.MapGet("/weatherforecast", (HttpContext httpContext) =>
+            app.MapGet("/attendees/{id}", async (ApplicationDbConnect context, int id) =>
+                await context.Attendees.FindAsync(id) is Attendee attendee
+                    ? Results.Ok(attendee)
+                    : Results.NotFound());
+
+            app.MapGet("/Test", (HttpContext httpContext) =>
             {
-                var forecast = Enumerable.Range(1, 5).Select(index =>
-                    new WeatherForecast
-                    {
-                        Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                        TemperatureC = Random.Shared.Next(-20, 55),
-                        Summary = summaries[Random.Shared.Next(summaries.Length)]
-                    })
-                    .ToArray();
-                return forecast;
+                return "HelloWorld";
             })
-            .WithName("GetWeatherForecast")
+            .WithName("GetHello")
             .WithOpenApi();
 
             app.Run();
