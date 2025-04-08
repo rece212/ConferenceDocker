@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  conference-db:
+    build:
+      context: ./ConferenceDB  # Adjusted build context
+      dockerfile: Dockerfile   # Dockerfile for the database
+    container_name: conference-db
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Password1!"
+      MSSQL_PID: "Express"
+    ports:
+      - "1433:1433"
+      - "1400:1433"  
+    volumes:
+      - db_data:/var/opt/mssql
+      - ./logs:/var/opt/mssql/log  # Optional: To access logs
+    restart: always  # Automatically restart on failure
+    networks:
+      - conference-network
+
+  api-service:
+    build:
+      context: .               # Root context to ensure file accessibility
+      dockerfile: ./Conference/Dockerfile  # Path to API Dockerfile
+    container_name: api-service
+    environment:
+      SQL_CONNECTION_STRING: "Server=conference-db;Database=Conference;Trusted_Connection=false;MultipleActiveResultSets=true;Encrypt=false;user id=sa;password=Password1!"
+    ports:
+      - "8080:8080"
+    depends_on:
+      conference-db:
+        condition: service_healthy
+    networks:
+      - conference-network
+
+networks:
+  conference-network:
+    driver: bridge
+
+volumes:
+  db_data:
