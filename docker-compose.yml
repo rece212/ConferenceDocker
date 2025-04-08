@@ -23,7 +23,7 @@ services:
   api-service:
     build:
       context: .               # Root context to ensure file accessibility
-      dockerfile: ./Conference/Dockerfile  # Path to API Dockerfile
+      dockerfile: ./ConferenceAPI/Dockerfile  # Path to API Dockerfile
     container_name: api-service
     environment:
       SQL_CONNECTION_STRING: "Server=conference-db;Database=Conference;Trusted_Connection=false;MultipleActiveResultSets=true;Encrypt=false;user id=sa;password=Password1!"
